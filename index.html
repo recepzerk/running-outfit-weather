@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What to Wear? | Running Outfit by Weather</title>
+  <meta name="description" content="Get instant running outfit recommendations based on current weather. Enter temperature, wind and humidity — or use your location for automatic weather data." />
+  <meta name="keywords" content="running outfit, what to wear running, running weather, running clothes calculator, runner gear" />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:title" content="What to Wear? | Running Outfit by Weather" />
+  <meta property="og:description" content="Instant running outfit recommendations based on temperature, wind and humidity. Free tool for runners." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://recepzerk.github.io/what-to-wear" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="canonical" href="https://recepzerk.github.io/what-to-wear" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sky-top:    #0a1628;
+      --sky-mid:    #0d2347;
+      --sky-low:    #0e3a6e;
+      --horizon:    #1a5fa0;
+      --cloud:      #e8f4ff;
+      --cloud-dim:  #b8d4f0;
+      --white:      #ffffff;
+      --text:       #ffffff;
+      --text-dim:   rgba(255,255,255,0.75);
+      --text-muted: rgba(255,255,255,0.5);
+      --border:     rgba(255,255,255,0.15);
+      --border2:    rgba(255,255,255,0.25);
+      --surface:    rgba(255,255,255,0.08);
+      --surface2:   rgba(255,255,255,0.14);
+      --gold:       #ffd166;
+      --mint:       #06d6a0;
+      --coral:      #ff6b6b;
+      --ice:        #a8dadc;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Lato', sans-serif;
+      background: var(--sky-top);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── SKY BACKGROUND ── */
+    .sky-bg {
+      position: fixed; inset: 0; z-index: 0;
+      background: linear-gradient(
+        180deg,
+        #020b18 0%,
+        #0a1628 20%,
+        #0d2347 45%,
+        #0e3a6e 70%,
+        #1a5fa0 100%
+      );
+    }
+
+    /* Stars */
+    .stars {
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.9) 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 8%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 40% 20%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 5%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 18%, rgba(255,255,255,0.9) 0%, transparent 100%),
+        radial-gradient(1px 1px at 88% 10%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 15% 35%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 50% 30%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 28%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(2px 2px at 33% 12%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 68% 22%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 5% 25%, rgba(255,255,255,0.5) 0%, transparent 100%);
+    }
+
+    /* Horizon glow */
+    .horizon-glow {
+      position: fixed; bottom: 0; left: 0; right: 0; height: 35%;
+      background: linear-gradient(to top, rgba(26,95,160,0.4), transparent);
+      z-index: 0; pointer-events: none;
+    }
+
+    /* ── LAYOUT ── */
+    .wrap {
+      position: relative; z-index: 1;
+      max-width: 680px; margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    /* ── HEADER ── */
+    header { margin-bottom: 2.5rem; text-align: center; }
+
+    .weather-icon-row {
+      display: flex; justify-content: center; gap: 12px;
+      margin-bottom: 1.5rem;
+      animation: fadeDown 0.6s both;
+    }
+    .w-icon {
+      width: 48px; height: 48px;
+      background: var(--surface);
+      border: 0.5px solid var(--border2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(40px, 9vw, 72px);
+      line-height: 1;
+      color: var(--white);
+      letter-spacing: -1px;
+      animation: fadeDown 0.6s 0.1s both;
+    }
+    h1 em {
+      font-style: normal;
+      color: var(--gold);
+    }
+
+    .tagline {
+      margin-top: 12px;
+      font-size: 16px;
+      font-weight: 300;
+      color: var(--text-dim);
+      animation: fadeDown 0.6s 0.2s both;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── LOCATION BUTTON ── */
+    .location-btn {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%;
+      background: var(--gold);
+      color: #0a1628;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.3px;
+      border: none; border-radius: 14px;
+      padding: 16px 24px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      margin-bottom: 1rem;
+      animation: fadeDown 0.6s 0.3s both;
+    }
+    .location-btn:hover { background: #ffe08a; }
+    .location-btn:active { transform: scale(0.98); }
+    .location-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .location-btn.loading { opacity: 0.7; pointer-events: none; }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 1rem;
+      animation: fadeDown 0.6s 0.35s both;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 0.5px; background: var(--border);
+    }
+    .divider span { font-size: 12px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+
+    /* ── INPUT CARD ── */
+    .input-card {
+      background: var(--surface);
+      border: 0.5px solid var(--border2);
+      border-radius: 20px;
+      padding: 1.75rem;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      animation: fadeDown 0.6s 0.4s both;
+    }
+
+    .sliders { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    .slider-field {}
+    .slider-top {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .slider-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .slider-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 800;
+      color: var(--white);
+    }
+    .slider-val span { font-size: 13px; font-weight: 400; color: var(--text-muted); margin-left: 2px; }
+
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 4px;
+      border-radius: 99px;
+      outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 2px solid var(--gold);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    /* Track colors per slider */
+    #temp-slider { background: linear-gradient(to right, var(--ice), var(--gold)); }
+    #wind-slider { background: linear-gradient(to right, rgba(255,255,255,0.1), #a8dadc); }
+    #humid-slider { background: linear-gradient(to right, rgba(255,255,255,0.1), #74b9e8); }
+
+    /* ── TOGGLES ── */
+    .toggles {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+      margin-top: 1.5rem; padding-top: 1.5rem;
+      border-top: 0.5px solid var(--border);
+    }
+    .toggle-group {}
+    .toggle-label {
+      font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-muted); font-weight: 700;
+      display: block; margin-bottom: 6px;
+    }
+    .toggle-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+    .tgl {
+      font-size: 12px; font-weight: 400;
+      background: transparent;
+      border: 0.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-dim);
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tgl.active {
+      background: var(--surface2);
+      border-color: var(--border2);
+      color: var(--white);
+    }
+
+    /* ── GENERATE BUTTON ── */
+    .gen-btn {
+      width: 100%;
+      margin-top: 1.5rem;
+      background: rgba(255,255,255,0.12);
+      border: 0.5px solid var(--border2);
+      border-radius: 14px;
+      color: var(--white);
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 16px;
+      letter-spacing: 1px;
+      padding: 15px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .gen-btn:hover { background: rgba(255,255,255,0.2); }
+    .gen-btn:active { transform: scale(0.98); }
+
+    /* ── WEATHER DISPLAY (after auto-detect) ── */
+    .weather-strip {
+      display: none;
+      background: rgba(255,209,102,0.1);
+      border: 0.5px solid rgba(255,209,102,0.3);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 1rem;
+      font-size: 13px; color: var(--gold);
+      align-items: center; gap: 8px;
+    }
+    .weather-strip.show { display: flex; }
+
+    /* ── RESULTS ── */
+    #results { display: none; margin-top: 2rem; }
+    #results.show { display: block; animation: fadeUp 0.4s both; }
+
+    .feels-like {
+      text-align: center; margin-bottom: 2rem;
+    }
+    .feels-label {
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 6px;
+    }
+    .feels-temp {
+      font-family: 'Syne', sans-serif;
+      font-size: 80px; font-weight: 800;
+      line-height: 1; color: var(--white);
+    }
+    .feels-temp sup { font-size: 32px; vertical-align: super; }
+    .feels-desc {
+      font-size: 15px; color: var(--text-dim); margin-top: 6px;
+    }
+
+    /* ── OUTFIT FIGURE ── */
+    .outfit-figure {
+      display: flex; justify-content: center;
+      margin: 1.5rem 0 2rem;
+    }
+    .runner-svg { width: 160px; height: 260px; }
+
+    /* ── OUTFIT TAGS ── */
+    .outfit-section { margin-bottom: 2rem; }
+    .outfit-heading {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 12px;
+    }
+    .outfit-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2);
+      border: 0.5px solid var(--border2);
+      border-radius: 99px;
+      padding: 8px 16px;
+      font-size: 14px; font-weight: 400;
+      color: var(--white);
+    }
+    .tag .dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* ── WARNINGS ── */
+    .warnings { display: flex; flex-direction: column; gap: 8px; margin-bottom: 2rem; }
+    .warn {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: var(--surface);
+      border-left: 3px solid var(--gold);
+      border-radius: 0 10px 10px 0;
+      padding: 10px 14px;
+      font-size: 13px; color: var(--text-dim);
+      line-height: 1.5;
+    }
+    .warn.danger { border-left-color: var(--coral); }
+    .warn.good   { border-left-color: var(--mint); }
+    .warn-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+    /* ── FOOTER ── */
+    footer {
+      margin-top: 4rem; padding-top: 2rem;
+      border-top: 0.5px solid var(--border);
+      font-size: 12px; color: var(--text-muted);
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+    footer a { color: var(--text-dim); text-decoration: none; }
+    footer a:hover { color: var(--gold); }
+
+    @media (max-width: 520px) {
+      .toggles { grid-template-columns: 1fr 1fr; }
+      .feels-temp { font-size: 64px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sky-bg"></div>
+  <div class="stars"></div>
+  <div class="horizon-glow"></div>
+
+  <div class="wrap">
+    <!-- HEADER -->
+    <header>
+      <div class="weather-icon-row" aria-hidden="true">
+        <div class="w-icon">🌤️</div>
+        <div class="w-icon">🏃</div>
+        <div class="w-icon">👕</div>
+      </div>
+      <h1>What to<br><em>Wear?</em></h1>
+      <p class="tagline">Running outfit recommendations based on real weather.</p>
+    </header>
+
+    <!-- LOCATION BUTTON -->
+    <button class="location-btn" id="loc-btn" onclick="getLocation()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/>
+        <path d="M12 8a4 4 0 100 8 4 4 0 000-8z" stroke-width="1.5"/>
+      </svg>
+      Use My Location — Get Current Weather
+    </button>
+
+    <!-- Weather strip -->
+    <div class="weather-strip" id="weather-strip">
+      <span>📍</span>
+      <span id="weather-strip-text"></span>
+    </div>
+
+    <div class="divider"><span>or enter manually</span></div>
+
+    <!-- INPUT CARD -->
+    <div class="input-card">
+      <div class="sliders">
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-label">🌡️ Temperature</span>
+            <span class="slider-val" id="temp-out">18<span>°C</span></span>
+          </div>
+          <input type="range" id="temp-slider" min="-15" max="40" value="18" step="1"
+            oninput="document.getElementById('temp-out').innerHTML=this.value+'<span>°C</span>'" />
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-label">💨 Wind Speed</span>
+            <span class="slider-val" id="wind-out">10<span> km/h</span></span>
+          </div>
+          <input type="range" id="wind-slider" min="0" max="60" value="10" step="1"
+            oninput="document.getElementById('wind-out').innerHTML=this.value+'<span> km/h</span>'" />
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-top">
+            <span class="slider-label">💧 Humidity</span>
+            <span class="slider-val" id="humid-out">50<span>%</span></span>
+          </div>
+          <input type="range" id="humid-slider" min="0" max="100" value="50" step="1"
+            oninput="document.getElementById('humid-out').innerHTML=this.value+'<span>%</span>'" />
+        </div>
+
+      </div>
+
+      <!-- TOGGLES -->
+      <div class="toggles">
+        <div class="toggle-group">
+          <span class="toggle-label">Time of Day</span>
+          <div class="toggle-btns">
+            <button class="tgl" onclick="setToggle('time','morning',this)">Morning</button>
+            <button class="tgl active" onclick="setToggle('time','midday',this)">Midday</button>
+            <button class="tgl" onclick="setToggle('time','evening',this)">Evening</button>
+          </div>
+        </div>
+        <div class="toggle-group">
+          <span class="toggle-label">Run Duration</span>
+          <div class="toggle-btns">
+            <button class="tgl active" onclick="setToggle('duration','short',this)">30 min</button>
+            <button class="tgl" onclick="setToggle('duration','medium',this)">1 hour</button>
+            <button class="tgl" onclick="setToggle('duration','long',this)">1h+</button>
+          </div>
+        </div>
+        <div class="toggle-group">
+          <span class="toggle-label">Rain?</span>
+          <div class="toggle-btns">
+            <button class="tgl active" onclick="setToggle('rain','no',this)">No</button>
+            <button class="tgl" onclick="setToggle('rain','yes',this)">Yes</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="gen-btn" onclick="recommend()">→ Get My Outfit</button>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results" role="region" aria-live="polite">
+
+      <div class="feels-like">
+        <div class="feels-label">Feels Like</div>
+        <div class="feels-temp" id="feels-val">—<sup>°</sup></div>
+        <div class="feels-desc" id="feels-desc"></div>
+      </div>
+
+      <!-- Runner SVG Figure -->
+      <div class="outfit-figure">
+        <svg class="runner-svg" viewBox="0 0 160 260" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Runner outfit illustration">
+          <!-- Head -->
+          <circle id="fig-head" cx="80" cy="30" r="18" fill="#f5c5a3"/>
+          <!-- Bere (hidden by default) -->
+          <path id="fig-bere" d="M62 28 Q80 8 98 28 Q90 22 80 22 Q70 22 62 28Z" fill="#4a90d9" opacity="0"/>
+          <!-- Cap -->
+          <path id="fig-cap" d="M63 26 Q80 12 97 26 L100 30 Q80 24 60 30Z" fill="#2c6e9e" opacity="0"/>
+          <!-- Torso (shirt) -->
+          <rect id="fig-shirt" x="58" y="50" width="44" height="52" rx="8" fill="#4a90d9"/>
+          <!-- Long sleeve overlay -->
+          <rect id="fig-longsleeve" x="58" y="50" width="44" height="52" rx="8" fill="#2c6e9e" opacity="0"/>
+          <!-- Jacket overlay -->
+          <rect id="fig-jacket" x="54" y="48" width="52" height="58" rx="10" fill="#1a4a7a" opacity="0"/>
+          <!-- Jacket zipper line -->
+          <line id="fig-zipper" x1="80" y1="52" x2="80" y2="102" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" opacity="0"/>
+          <!-- Left arm -->
+          <rect id="fig-arm-l" x="36" y="52" width="22" height="12" rx="6" fill="#4a90d9" transform="rotate(20,47,58)"/>
+          <!-- Right arm -->
+          <rect id="fig-arm-r" x="102" y="52" width="22" height="12" rx="6" fill="#4a90d9" transform="rotate(-20,113,58)"/>
+          <!-- Gloves -->
+          <circle id="fig-glove-l" cx="32" cy="68" r="7" fill="#2c3e50" opacity="0"/>
+          <circle id="fig-glove-r" cx="128" cy="68" r="7" fill="#2c3e50" opacity="0"/>
+          <!-- Shorts / Tights -->
+          <rect id="fig-shorts" x="60" y="100" width="40" height="30" rx="6" fill="#1a3a5c"/>
+          <rect id="fig-tights" x="60" y="100" width="40" height="80" rx="6" fill="#1a3a5c" opacity="0"/>
+          <!-- Left leg -->
+          <rect id="fig-leg-l" x="60" y="128" width="17" height="70" rx="8" fill="#c8a882"/>
+          <!-- Right leg -->
+          <rect id="fig-leg-r" x="83" y="128" width="17" height="70" rx="8" fill="#c8a882"/>
+          <!-- Tights legs overlay -->
+          <rect id="fig-tight-l" x="60" y="128" width="17" height="70" rx="8" fill="#1a3a5c" opacity="0"/>
+          <rect id="fig-tight-r" x="83" y="128" width="17" height="70" rx="8" fill="#1a3a5c" opacity="0"/>
+          <!-- Thermal base overlay -->
+          <rect id="fig-thermal-l" x="60" y="128" width="17" height="70" rx="8" fill="#2c4a6e" opacity="0"/>
+          <rect id="fig-thermal-r" x="83" y="128" width="17" height="70" rx="8" fill="#2c4a6e" opacity="0"/>
+          <!-- Shoes -->
+          <ellipse id="fig-shoe-l" cx="68" cy="200" rx="14" ry="7" fill="#e74c3c"/>
+          <ellipse id="fig-shoe-r" cx="92" cy="200" rx="14" ry="7" fill="#e74c3c"/>
+          <!-- Socks -->
+          <rect id="fig-sock-l" x="60" y="192" width="17" height="8" rx="3" fill="white" opacity="0"/>
+          <rect id="fig-sock-r" x="83" y="192" width="17" height="8" rx="3" fill="white" opacity="0"/>
+          <!-- Reflective vest -->
+          <path id="fig-vest" d="M58 50 L54 48 L54 106 L58 102 Z M102 50 L106 48 L106 106 L102 102 Z M58 50 L102 50 L102 55 L58 55 Z" fill="rgba(255,209,102,0.7)" opacity="0"/>
+          <!-- Sunglasses -->
+          <path id="fig-sunnies" d="M68 28 L78 26 M82 26 L92 28" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round" opacity="0"/>
+          <ellipse id="fig-lens-l" cx="72" cy="29" rx="7" ry="4" fill="rgba(0,0,0,0.4)" opacity="0"/>
+          <ellipse id="fig-lens-r" cx="88" cy="29" rx="7" ry="4" fill="rgba(0,0,0,0.4)" opacity="0"/>
+        </svg>
+      </div>
+
+      <!-- Outfit tags -->
+      <div class="outfit-section">
+        <div class="outfit-heading">Your Outfit</div>
+        <div class="outfit-tags" id="outfit-tags"></div>
+      </div>
+
+      <!-- Warnings -->
+      <div class="outfit-section">
+        <div class="outfit-heading">Tips & Alerts</div>
+        <div class="warnings" id="warnings"></div>
+      </div>
+
+    </div>
+
+    <footer>
+      <span>What to Wear? — built for runners</span>
+      <a href="https://github.com/recepzerk" target="_blank" rel="noopener">GitHub ↗</a>
+    </footer>
+  </div>
+
+<script>
+  /* ── STATE ── */
+  const state = { time: 'midday', duration: 'short', rain: 'no' };
+
+  function setToggle(group, val, el) {
+    state[group] = val;
+    el.closest('.toggle-btns').querySelectorAll('.tgl').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  /* ── LOCATION ── */
+  async function getLocation() {
+    const btn = document.getElementById('loc-btn');
+    btn.classList.add('loading');
+    btn.textContent = 'Fetching weather…';
+
+    if (!navigator.geolocation) {
+      btn.classList.remove('loading');
+      btn.textContent = 'Geolocation not supported';
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async pos => {
+      try {
+        const { latitude: lat, longitude: lon } = pos.coords;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const c = data.current;
+
+        const temp = Math.round(c.temperature_2m);
+        const wind = Math.round(c.wind_speed_10m);
+        const humid = Math.round(c.relative_humidity_2m);
+
+        document.getElementById('temp-slider').value = temp;
+        document.getElementById('wind-slider').value = wind;
+        document.getElementById('humid-slider').value = humid;
+        document.getElementById('temp-out').innerHTML = temp + '<span>°C</span>';
+        document.getElementById('wind-out').innerHTML = wind + '<span> km/h</span>';
+        document.getElementById('humid-out').innerHTML = humid + '<span>%</span>';
+
+        const strip = document.getElementById('weather-strip');
+        strip.classList.add('show');
+        document.getElementById('weather-strip-text').textContent =
+          `Live weather loaded — ${temp}°C, ${wind} km/h wind, ${humid}% humidity`;
+
+        btn.innerHTML = '✓ Weather loaded — scroll down';
+        btn.style.background = 'var(--mint)';
+        btn.classList.remove('loading');
+
+        recommend();
+      } catch(e) {
+        btn.classList.remove('loading');
+        btn.textContent = 'Could not fetch weather. Enter manually.';
+      }
+    }, () => {
+      btn.classList.remove('loading');
+      btn.textContent = 'Location denied. Enter manually.';
+    });
+  }
+
+  /* ── WIND CHILL / HEAT INDEX ── */
+  function feelsLike(temp, wind, humid) {
+    let fl = temp;
+    if (temp <= 10 && wind >= 5) {
+      // Wind chill (Environment Canada formula)
+      fl = 13.12 + 0.6215 * temp - 11.37 * Math.pow(wind, 0.16) + 0.3965 * temp * Math.pow(wind, 0.16);
+    } else if (temp >= 27 && humid >= 40) {
+      // Heat index (simplified Steadman)
+      fl = -8.78469475556 + 1.61139411 * temp + 2.3385282 * humid
+         - 0.14611605 * temp * humid - 0.01230816 * temp * temp
+         - 0.01642482 * humid * humid + 0.00221732 * temp * temp * humid
+         + 0.00072546 * temp * humid * humid - 0.00000358 * temp * temp * humid * humid;
+    }
+    return Math.round(fl);
+  }
+
+  /* ── OUTFIT LOGIC ── */
+  function getOutfit(fl, wind, humid, time, duration, rain) {
+    const outfit = [];
+    const warnings = [];
+    const fig = {};
+
+    // Adjust for long run (body heats up)
+    const adj = duration === 'long' ? 3 : duration === 'medium' ? 1.5 : 0;
+    const effective = fl + adj;
+
+    // ── TOP ──
+    if (effective >= 22) {
+      outfit.push({ label: 'Singlet / tank top', dot: '#ff9a3c' });
+      fig.shirt = '#e8753a'; fig.longsleeve = 0;
+    } else if (effective >= 14) {
+      outfit.push({ label: 'Short-sleeve tee', dot: '#4a90d9' });
+      fig.shirt = '#4a90d9'; fig.longsleeve = 0;
+    } else if (effective >= 6) {
+      outfit.push({ label: 'Long-sleeve base layer', dot: '#5ba4f5' });
+      fig.shirt = '#3a7abf'; fig.longsleeve = 1;
+    } else if (effective >= -2) {
+      outfit.push({ label: 'Thermal long-sleeve', dot: '#a8dadc' });
+      outfit.push({ label: 'Light running jacket', dot: '#2c6e9e' });
+      fig.shirt = '#2c5a8a'; fig.longsleeve = 1; fig.jacket = 1;
+    } else {
+      outfit.push({ label: 'Thermal base layer', dot: '#a8dadc' });
+      outfit.push({ label: 'Insulated running jacket', dot: '#1a4a7a' });
+      fig.shirt = '#1a3a6a'; fig.longsleeve = 1; fig.jacket = 1;
+    }
+
+    // ── BOTTOM ──
+    if (effective >= 18) {
+      outfit.push({ label: 'Running shorts', dot: '#4cde80' });
+      fig.tights = 0;
+    } else if (effective >= 8) {
+      outfit.push({ label: '3/4 tights or capris', dot: '#06d6a0' });
+      fig.tights = 0.6;
+    } else {
+      outfit.push({ label: 'Full running tights', dot: '#2c9e7a' });
+      fig.tights = 1;
+    }
+
+    if (effective < -2) {
+      outfit.push({ label: 'Thermal tights (layered)', dot: '#1a5a8a' });
+      fig.thermal = 1;
+    }
+
+    // ── HEAD & HANDS ──
+    if (effective < 6) {
+      outfit.push({ label: 'Running gloves', dot: '#5ba4f5' });
+      fig.gloves = 1;
+    }
+    if (effective < 0) {
+      outfit.push({ label: 'Beanie / running hat', dot: '#a8dadc' });
+      fig.bere = 1;
+    }
+    if (effective < -5) {
+      outfit.push({ label: 'Neck gaiter / buff', dot: '#74b9e8' });
+    }
+
+    // ── SOCKS ──
+    if (effective < 5) {
+      outfit.push({ label: 'Thermal running socks', dot: '#f0f0f0' });
+      fig.socks = 1;
+    }
+
+    // ── RAIN ──
+    if (rain === 'yes') {
+      outfit.push({ label: 'Waterproof jacket', dot: '#ffd166' });
+      fig.jacket = 1;
+    }
+
+    // ── REFLECTIVE (morning/evening) ──
+    if (time === 'morning' || time === 'evening') {
+      outfit.push({ label: 'Reflective vest or strips', dot: '#ffd166' });
+      fig.vest = 1;
+    }
+
+    // ── WARNINGS ──
+    if (effective >= 28) warnings.push({ type: 'danger', icon: '🔥', text: 'Heat advisory: carry water and consider a shorter or shaded route.' });
+    if (effective >= 22 && time === 'midday') warnings.push({ type: 'warn', icon: '☀️', text: 'UV index likely high at midday — apply sunscreen and consider sunglasses.' });
+    if (wind >= 30) warnings.push({ type: 'warn', icon: '💨', text: 'Strong wind: start your run into the wind so you return with a tailwind.' });
+    if (rain === 'yes') warnings.push({ type: 'warn', icon: '🌧️', text: 'Wet surfaces reduce grip — choose shoes with drainage and take it easy on turns.' });
+    if (effective < -5) warnings.push({ type: 'danger', icon: '🥶', text: 'Very cold: cover exposed skin. Shorten your run if conditions worsen.' });
+    if (duration === 'long' && effective >= 18) warnings.push({ type: 'warn', icon: '💧', text: 'Long run in warm weather: hydrate every 15–20 minutes.' });
+    if (effective >= 10 && effective < 20 && rain === 'no') warnings.push({ type: 'good', icon: '✅', text: 'Ideal running weather! This is your power zone.' });
+    if (time === 'morning' || time === 'evening') warnings.push({ type: 'warn', icon: '👁️', text: 'Low visibility conditions — wear bright or reflective gear.' });
+
+    return { outfit, warnings, fig };
+  }
+
+  /* ── UPDATE SVG FIGURE ── */
+  function updateFigure(fig) {
+    const set = (id, opacity, fill) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (opacity !== undefined) el.setAttribute('opacity', opacity);
+      if (fill) el.setAttribute('fill', fill);
+    };
+
+    if (fig.shirt) set('fig-shirt', 1, fig.shirt);
+    set('fig-longsleeve', fig.longsleeve || 0);
+    set('fig-jacket', fig.jacket || 0);
+    set('fig-zipper', fig.jacket || 0);
+    set('fig-arm-l', 1, fig.jacket ? '#1a4a7a' : (fig.longsleeve ? '#2c6e9e' : fig.shirt));
+    set('fig-arm-r', 1, fig.jacket ? '#1a4a7a' : (fig.longsleeve ? '#2c6e9e' : fig.shirt));
+    set('fig-glove-l', fig.gloves || 0);
+    set('fig-glove-r', fig.gloves || 0);
+    set('fig-bere', fig.bere || 0);
+    set('fig-tights', fig.tights || 0);
+    set('fig-tight-l', fig.tights || 0);
+    set('fig-tight-r', fig.tights || 0);
+    set('fig-thermal-l', fig.thermal || 0);
+    set('fig-thermal-r', fig.thermal || 0);
+    set('fig-sock-l', fig.socks || 0);
+    set('fig-sock-r', fig.socks || 0);
+    set('fig-vest', fig.vest || 0);
+    set('fig-lens-l', fig.sunglasses || 0);
+    set('fig-lens-r', fig.sunglasses || 0);
+    set('fig-sunnies', fig.sunglasses || 0);
+  }
+
+  /* ── FEELS LIKE DESC ── */
+  function feelsDesc(fl) {
+    if (fl >= 30) return 'Very hot — high risk of overheating';
+    if (fl >= 24) return 'Hot — stay hydrated and run early';
+    if (fl >= 18) return 'Warm — comfortable for most runners';
+    if (fl >= 12) return 'Mild — near-perfect running weather';
+    if (fl >= 6)  return 'Cool — good for fast efforts';
+    if (fl >= 0)  return 'Cold — dress in layers';
+    if (fl >= -6) return 'Very cold — protect extremities';
+    return 'Extreme cold — consider indoor alternatives';
+  }
+
+  /* ── MAIN RECOMMEND ── */
+  function recommend() {
+    const temp  = parseInt(document.getElementById('temp-slider').value);
+    const wind  = parseInt(document.getElementById('wind-slider').value);
+    const humid = parseInt(document.getElementById('humid-slider').value);
+    const fl = feelsLike(temp, wind, humid);
+
+    const { outfit, warnings, fig } = getOutfit(
+      fl, wind, humid, state.time, state.duration, state.rain
+    );
+
+    document.getElementById('feels-val').innerHTML = fl + '<sup>°</sup>';
+    document.getElementById('feels-desc').textContent = feelsDesc(fl);
+
+    document.getElementById('outfit-tags').innerHTML = outfit.map(o => `
+      <div class="tag">
+        <span class="dot" style="background:${o.dot}"></span>
+        ${o.label}
+      </div>`).join('');
+
+    document.getElementById('warnings').innerHTML = warnings.map(w => `
+      <div class="warn ${w.type}">
+        <span class="warn-icon">${w.icon}</span>
+        <span>${w.text}</span>
+      </div>`).join('');
+
+    updateFigure(fig);
+
+    const results = document.getElementById('results');
+    results.classList.add('show');
+    setTimeout(() => results.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') recommend(); });
+</script>
+</body>
+</html>
